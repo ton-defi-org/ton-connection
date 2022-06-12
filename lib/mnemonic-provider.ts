@@ -3,6 +3,7 @@ import { WalletV4Contract, WalletV4Source } from "ton-contracts";
 import { mnemonicToWalletKey } from "ton-crypto";
 import { TonWalletProvider, TransactionDetails, Wallet } from "./ton-connection";
 
+// TODO - fix wallet version handling
 export class MnemonicProvider implements TonWalletProvider {
   private _mnemonic: string[];
   private _tonClient: TonClient;
@@ -61,7 +62,6 @@ export class MnemonicProvider implements TonWalletProvider {
       }),
     });
 
-    console.log("sending");
     await this._tonClient.sendExternalMessage(walletContract, transfer);
   }
   async connect(): Promise<Wallet> {
