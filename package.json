@@ -1,9 +1,17 @@
 {
-  "name": "ton-connection",
+  "name": "@ton-defi.org/ton-connection",
   "description": "Javascript library for connecting to ton accounts",
   "version": "0.0.1",
   "license": "MIT",
   "author": "ton-defi.org",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ton-defi-org/ton-connection.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ton-defi-org/ton-connection/issues"
+  },
+  "homepage": "https://github.com/ton-defi-org/ton-connection#readme",
   "scripts": {
     "prettier": "npx prettier --write '{test,contracts,build}/**/*.{ts,js,json}'",
     "test": "mocha  --exit test/**/*.spec.ts",
