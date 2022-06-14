@@ -118,7 +118,7 @@ export class TonhubProvider implements TonWalletProvider {
     }
 
     const INIT_CELL = new Cell();
-    request.stateInit.writeTo(INIT_CELL);
+    request.stateInit?.writeTo(INIT_CELL);
     const initCellBoc = INIT_CELL.toBoc();
 
     if (this._config.onTransactionLinkReady) {
