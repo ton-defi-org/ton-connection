@@ -42,7 +42,7 @@ describe("Tonhub Provider", () => {
     expect(deepLinkStub).to.have.been.calledOnce;
     expect(tonConnectStub).to.not.have.been.called;
   });
-  
+
   it("Calls tonhub connection if deeplink callback is not provided", async () => {
     const prov = new TonhubProvider({
       onSessionLinkReady: (l) => {},

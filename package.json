@@ -13,7 +13,8 @@
   },
   "homepage": "https://github.com/ton-defi-org/ton-connection#readme",
   "scripts": {
-    "prettier": "npx prettier --write '{test,contracts,build}/**/*.{ts,js,json}'",
+    "prettier": "npx prettier --write '{test,lib}/**/*.{ts,js,json}'",
+    "eslint": "npx eslint --fix '{test,lib}/**/*.{ts,js,json}'",
     "test": "mocha  --exit test/**/*.spec.ts",
     "test:coverage": "nyc mocha --exit test/**/*.spec.ts",
     "test:watch": "mocha --watch --watch-files test/**/*.ts,lib/**/*.ts,contracts/**/*.ts test/**/*.spec.ts",

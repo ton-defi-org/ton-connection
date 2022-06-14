@@ -1,7 +1,13 @@
 import chai, { expect } from "chai";
 import chaiBN from "chai-bn";
 import BN from "bn.js";
-import { MnemonicProvider, TonConnection, TonWalletProvider, TransactionDetails, Wallet } from "..";
+import {
+  MnemonicProvider,
+  TonConnection,
+  TonWalletProvider,
+  TransactionDetails,
+  Wallet,
+} from "../dist";
 chai.use(chaiBN(BN));
 
 const walletStub = {
