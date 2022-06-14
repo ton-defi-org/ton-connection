@@ -1,7 +1,7 @@
 {
   "name": "@ton-defi.org/ton-connection",
   "description": "Javascript library for connecting to ton accounts",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "MIT",
   "author": "ton-defi.org",
   "repository": {
@@ -20,7 +20,7 @@
     "test:watch": "mocha --watch --watch-files test/**/*.ts,lib/**/*.ts,contracts/**/*.ts test/**/*.spec.ts",
     "build": "ts-node ./build/_build.ts",
     "deploy": "ts-node ./build/_deploy.ts",
-    "dist": "ncc build index.ts --target=es5",
+    "dist": "tsc",
     "deploy:testnet": "ts-node ./build/_deploy.ts",
     "_postinstall": "ts-node ./build/_setup.ts"
   },
