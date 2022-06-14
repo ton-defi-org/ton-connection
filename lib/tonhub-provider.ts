@@ -7,6 +7,7 @@ export type TonHubProviderConfig = {
   isSandbox?: boolean | undefined;
   onSessionLinkReady: (link: string) => void;
   persistenceProvider?: PersistenceProvider;
+  onTransactionLinkReady?: (link: string) => void;
 };
 
 export interface PersistenceProvider {
@@ -44,27 +45,44 @@ export class TonhubProvider implements TonWalletProvider {
     this._config.persistenceProvider?.removeItem(this.ITEM_KEY);
   }
 
-  async requestTransaction(request: TransactionDetails, onSuccess?: () => void): Promise<void> {
-    if (!this._session) throw new Error("No session!");
+  private _deepLinkTransaction(request: TransactionDetails, initCell: Buffer) {
+    const deepLinkPrefix = this._config.isSandbox ? "ton-test" : "ton";
 
-    const state = await this._tonhubConnector.getSessionState(this._session.id);
-
-    if (state.state !== "ready") {
-      this._clearSession();
-      throw new Error("State is not ready");
+    function encodeBase64URL(buffer: Buffer): string {
+      const ENC: any = {
+        "+": "-",
+        "/": "_",
+        "=": ".",
+      };
+      return buffer.toString("base64").replace(/[+/=]/g, (m) => {
+        return ENC[m];
+      });
     }
 
-    const INIT_CELL = new Cell();
-    request.stateInit.writeTo(INIT_CELL);
-    const b64InitCell = INIT_CELL.toBoc().toString("base64");
+    let link = `${deepLinkPrefix}://transfer/${request.to.toFriendly()}?amount=${
+      request.value
+    }&init=${encodeBase64URL(initCell)}`;
 
+    if (request.message) {
+      const b64MsgCell = encodeBase64URL(request.message.toBoc());
+      link = `${link}&bin=${b64MsgCell}`;
+    }
+
+    this._config.onTransactionLinkReady!(link);
+  }
+
+  private async _tonHubConnectorTransaction(
+    request: TransactionDetails,
+    initCell: Buffer,
+    onSuccess?: () => void
+  ) {
     const response = await this._tonhubConnector.requestTransaction({
-      seed: this._session.seed,
+      seed: this._session!.seed,
       appPublicKey: state.wallet.appPublicKey,
       to: request.to.toFriendly(),
       value: request.value.toString(),
       timeout: 5 * 60 * 1000,
-      stateInit: b64InitCell,
+      stateInit: initCell.toString("base64"),
       // text: request.text,
       payload: request.message?.toBoc().toString("base64"),
     });
@@ -88,6 +106,28 @@ export class TonhubProvider implements TonWalletProvider {
       // const externalMessage = response.response; // Signed external message that was sent to the network
     }
   }
+
+  async requestTransaction(request: TransactionDetails, onSuccess?: () => void): Promise<void> {
+    if (!this._session) throw new Error("No session!");
+
+    const state = await this._tonhubConnector.getSessionState(this._session.id);
+
+    if (state.state !== "ready") {
+      this._clearSession();
+      throw new Error("State is not ready");
+    }
+
+    const INIT_CELL = new Cell();
+    request.stateInit?.writeTo(INIT_CELL);
+    const initCellBoc = INIT_CELL.toBoc();
+
+    if (this._config.onTransactionLinkReady) {
+      this._deepLinkTransaction(request, initCellBoc);
+    } else {
+      this._tonHubConnectorTransaction(request, initCellBoc, onSuccess);
+    }
+  }
+
   async connect(): Promise<Wallet> {
     const { location } = document; // TODO consider non-web if makes sense
     let session: TonhubCreatedSession;
@@ -103,11 +143,7 @@ export class TonhubProvider implements TonWalletProvider {
       session = this._session;
     }
 
-    const state = await this._tonhubConnector.awaitSessionReady(
-      session.id,
-      this.TONHUB_TIMEOUT,
-      0
-    );
+    const state = await this._tonhubConnector.awaitSessionReady(session.id, this.TONHUB_TIMEOUT, 0);
 
     if (state.state === "revoked") {
       this._clearSession();
