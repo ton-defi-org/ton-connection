@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Cell, ConfigStore } from "ton";
-import { TonhubConnector, TonhubCreatedSession } from "ton-x";
+import { TonhubConnector, TonhubCreatedSession, TonhubSessionState, TonhubSessionStateReady } from "ton-x";
 import { TonWalletProvider, TransactionDetails, Wallet } from "./ton-connection";
 
 export type TonHubProviderConfig = {
@@ -74,6 +74,7 @@ export class TonhubProvider implements TonWalletProvider {
   private async _tonHubConnectorTransaction(
     request: TransactionDetails,
     initCell: Buffer,
+    state: TonhubSessionStateReady,
     onSuccess?: () => void
   ) {
     const response = await this._tonhubConnector.requestTransaction({
@@ -124,7 +125,7 @@ export class TonhubProvider implements TonWalletProvider {
     if (this._config.onTransactionLinkReady) {
       this._deepLinkTransaction(request, initCellBoc);
     } else {
-      this._tonHubConnectorTransaction(request, initCellBoc, onSuccess);
+      this._tonHubConnectorTransaction(request, initCellBoc, state, onSuccess);
     }
   }
 
