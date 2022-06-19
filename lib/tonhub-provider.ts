@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Cell, ConfigStore } from "ton";
-import { TonhubConnector, TonhubCreatedSession, TonhubSessionState, TonhubSessionStateReady } from "ton-x";
+import {
+  TonhubConnector,
+  TonhubCreatedSession,
+  TonhubSessionState,
+  TonhubSessionStateReady,
+} from "ton-x";
 import { TonWalletProvider, TransactionDetails, Wallet } from "./ton-connection";
 
 export type TonHubProviderConfig = {
@@ -18,31 +23,35 @@ export interface PersistenceProvider {
 
 export class TonhubProvider implements TonWalletProvider {
   private TONHUB_TIMEOUT = 5 * 60 * 1000;
-  private ITEM_KEY = "ton_hub_sess";
+  private ITEM_KEY_SUFFIX = "ton_hub_sess";
 
   private _tonhubConnector: TonhubConnector;
   private _config: TonHubProviderConfig;
   private _session?: TonhubCreatedSession;
 
+  private toItemKey(): string {
+    return (this._config.isSandbox ? "sandbox" : "mainnet") + this.ITEM_KEY_SUFFIX;
+  }
+
   constructor(config: TonHubProviderConfig) {
     this._tonhubConnector = new TonhubConnector({ testnet: config.isSandbox });
     this._config = config;
-    const existingSession = this._config.persistenceProvider?.getItem(this.ITEM_KEY);
+    const existingSession = this._config.persistenceProvider?.getItem(this.toItemKey());
     try {
       this._session = existingSession && JSON.parse(existingSession);
     } catch (e) {
-      this._config.persistenceProvider?.removeItem(this.ITEM_KEY);
+      this._config.persistenceProvider?.removeItem(this.toItemKey());
     }
   }
 
   private _setSession(session: TonhubCreatedSession) {
     this._session = session;
-    this._config.persistenceProvider?.setItem(this.ITEM_KEY, JSON.stringify(session));
+    this._config.persistenceProvider?.setItem(this.toItemKey(), JSON.stringify(session));
   }
 
   private _clearSession() {
     this._session = undefined;
-    this._config.persistenceProvider?.removeItem(this.ITEM_KEY);
+    this._config.persistenceProvider?.removeItem(this.toItemKey());
   }
 
   private _deepLinkTransaction(request: TransactionDetails, initCell: Buffer) {
