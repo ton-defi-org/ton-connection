@@ -15,7 +15,7 @@ export interface TonWalletProvider {
 export interface TransactionDetails {
   to: Address;
   value: BN;
-  stateInit?: StateInit;
+  stateInit: StateInit;
   message?: Cell;
 }
 
