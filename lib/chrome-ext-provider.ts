@@ -1,5 +1,6 @@
 import { Cell } from "ton";
 import { TonWalletProvider, TransactionDetails, Wallet } from "./ton-connection";
+import { stateInitToBuffer } from "./utils";
 
 export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -95,17 +96,15 @@ export class ChromeExtensionWalletProvider implements TonWalletProvider {
     }
   }
   async requestTransaction(request: TransactionDetails, onSuccess?: () => void): Promise<void> {
-    const INIT_CELL = new Cell();
-    request.stateInit.writeTo(INIT_CELL);
-    const b64InitCell = INIT_CELL.toBoc().toString("base64");
-
     try {
       const res: any = await tonWalletClient.sendTransaction({
         to: request.to.toFriendly(),
         value: request.value.toString(),
         dataType: "boc",
         data: request.message?.toBoc().toString("base64"),
-        stateInit: b64InitCell,
+        stateInit: request.stateInit
+          ? stateInitToBuffer(request.stateInit).toString("base64")
+          : undefined,
       });
 
       if (!res) {

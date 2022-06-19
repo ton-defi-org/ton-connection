@@ -7,6 +7,7 @@ import {
   TonhubSessionStateReady,
 } from "ton-x";
 import { TonWalletProvider, TransactionDetails, Wallet } from "./ton-connection";
+import { stateInitToBuffer } from "./utils";
 
 export type TonHubProviderConfig = {
   isSandbox?: boolean | undefined;
@@ -54,7 +55,7 @@ export class TonhubProvider implements TonWalletProvider {
     this._config.persistenceProvider?.removeItem(this.toItemKey());
   }
 
-  private _deepLinkTransaction(request: TransactionDetails, initCell: Buffer) {
+  private _deepLinkTransaction(request: TransactionDetails, initCell?: Buffer) {
     const deepLinkPrefix = this._config.isSandbox ? "ton-test" : "ton";
 
     function encodeBase64URL(buffer: Buffer): string {
@@ -68,13 +69,14 @@ export class TonhubProvider implements TonWalletProvider {
       });
     }
 
-    let link = `${deepLinkPrefix}://transfer/${request.to.toFriendly()}?amount=${
-      request.value
-    }&init=${encodeBase64URL(initCell)}`;
+    let link = `${deepLinkPrefix}://transfer/${request.to.toFriendly()}?amount=${request.value}`;
+
+    if (initCell) {
+      link = `${link}&init=${encodeBase64URL(initCell)}`;
+    }
 
     if (request.message) {
-      const b64MsgCell = encodeBase64URL(request.message.toBoc());
-      link = `${link}&bin=${b64MsgCell}`;
+      link = `${link}&bin=${encodeBase64URL(request.message.toBoc())}`;
     }
 
     this._config.onTransactionLinkReady!(link);
@@ -82,8 +84,8 @@ export class TonhubProvider implements TonWalletProvider {
 
   private async _tonHubConnectorTransaction(
     request: TransactionDetails,
-    initCell: Buffer,
     state: TonhubSessionStateReady,
+    initCell?: Buffer,
     onSuccess?: () => void
   ) {
     const response = await this._tonhubConnector.requestTransaction({
@@ -92,7 +94,7 @@ export class TonhubProvider implements TonWalletProvider {
       to: request.to.toFriendly(),
       value: request.value.toString(),
       timeout: 5 * 60 * 1000,
-      stateInit: initCell.toString("base64"),
+      stateInit: initCell?.toString("base64"),
       // text: request.text,
       payload: request.message?.toBoc().toString("base64"),
     });
@@ -127,14 +129,16 @@ export class TonhubProvider implements TonWalletProvider {
       throw new Error("State is not ready");
     }
 
-    const INIT_CELL = new Cell();
-    request.stateInit?.writeTo(INIT_CELL);
-    const initCellBoc = INIT_CELL.toBoc();
+    let initCellBoc: Buffer | undefined;
+
+    if (request.stateInit) {
+      initCellBoc = stateInitToBuffer(request.stateInit);
+    }
 
     if (this._config.onTransactionLinkReady) {
       this._deepLinkTransaction(request, initCellBoc);
     } else {
-      this._tonHubConnectorTransaction(request, initCellBoc, state, onSuccess);
+      this._tonHubConnectorTransaction(request, state, initCellBoc, onSuccess);
     }
   }
 
