@@ -3,7 +3,7 @@ import chaiBN from "chai-bn";
 import BN from "bn.js";
 import { TonhubConnector } from "ton-x";
 import * as sinon from "ts-sinon";
-import { TonhubProvider } from "../lib/tonhub-provider";
+import { TonhubProvider, PersistenceProvider } from "../lib/tonhub-provider";
 import sinonChai from "sinon-chai";
 chai.use(chaiBN(BN));
 chai.use(sinonChai);
@@ -22,6 +22,34 @@ describe("Tonhub Provider", () => {
   });
   tcStub.getSessionState.resolves({ state: "ready" });
   tcStub.createNewSession.resolves({ link: "" });
+
+  [
+    { key: "mainnet_ton_hub_sess", isSandbox: false },
+    { key: "sandbox_ton_hub_sess", isSandbox: true },
+  ].forEach(({ key, isSandbox }) => {
+    it(`Fetches an env-specific key for ${isSandbox ? "sandbox" : "mainnet"}`, async () => {
+      const persistenceProvider = {
+        getItem: sinon.default.spy((key: string): string | null => {
+          return null;
+        }),
+        removeItem: (key: string) => {
+          /*Empty*/
+        },
+        setItem: (key: string, value: string) => {
+          /*Empty*/
+        },
+      };
+
+      const prov = new TonhubProvider({
+        onSessionLinkReady: (l) => {},
+        onTransactionLinkReady: () => {},
+        persistenceProvider,
+        isSandbox,
+      });
+
+      expect(persistenceProvider.getItem).to.have.been.calledOnceWith(key);
+    });
+  });
 
   it("Generates deep link for transaction if callback is provided", async () => {
     const prov = new TonhubProvider({

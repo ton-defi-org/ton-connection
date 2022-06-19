@@ -30,7 +30,7 @@ export class TonhubProvider implements TonWalletProvider {
   private _session?: TonhubCreatedSession;
 
   private toItemKey(): string {
-    return (this._config.isSandbox ? "sandbox" : "mainnet") + this.ITEM_KEY_SUFFIX;
+    return `${this._config.isSandbox ? "sandbox" : "mainnet"}_${this.ITEM_KEY_SUFFIX}`;
   }
 
   constructor(config: TonHubProviderConfig) {
