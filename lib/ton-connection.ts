@@ -68,6 +68,6 @@ export class TonConnection {
     parser: (stack: (BN | Cell)[]) => T
   ): Promise<T> {
     const res = await this._tonClient.callGetMethod(contract, method, this.#prepareParams(params));
-    return parser(this.#parseGetMethodCall(res.stack));
+    return parser(this.#parseGetMethodCall(res.stack as [["num" | "cell", any]]));
   }
 }
