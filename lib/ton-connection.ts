@@ -19,6 +19,8 @@ export interface TransactionDetails {
   message?: Cell;
 }
 
+export type GetResponseValue = Cell | BN;
+
 export class TonConnection {
   private _provider: TonWalletProvider;
   public _tonClient: TonClient; // Future - wrap functionality and make private
@@ -35,7 +37,7 @@ export class TonConnection {
     return this._provider.connect();
   }
 
-  #parseGetMethodCall(stack: [["num" | "cell", any]]) {
+  #parseGetMethodCall(stack: [["num" | "cell", any]]): GetResponseValue[] {
     return stack.map(([type, val]) => {
       switch (type) {
         case "num":
@@ -65,7 +67,7 @@ export class TonConnection {
     contract: Address,
     method: string,
     params: Cell[],
-    parser: (stack: (BN | Cell)[]) => T
+    parser: (stack: GetResponseValue[]) => T
   ): Promise<T> {
     const res = await this._tonClient.callGetMethod(contract, method, this.#prepareParams(params));
     return parser(this.#parseGetMethodCall(res.stack as [["num" | "cell", any]]));

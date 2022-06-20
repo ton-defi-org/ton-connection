@@ -1,6 +1,5 @@
-import { Cell } from "ton";
 import { TonWalletProvider, TransactionDetails, Wallet } from "./ton-connection";
-import { stateInitToBuffer } from "./utils";
+import { stateInitToBuffer } from "./internal_utils";
 
 export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
