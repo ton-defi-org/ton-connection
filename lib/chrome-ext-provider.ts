@@ -1,5 +1,6 @@
 import { Cell } from "ton";
 import { TonWalletProvider, TransactionDetails, Wallet } from "./ton-connection";
+import { stateInitToBuffer } from "./utils";
 
 export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -10,7 +11,7 @@ export function delay(ms: number) {
 const TON_WALLET_EXTENSION_URL =
   "https://chrome.google.com/webstore/detail/ton-wallet/nphplpgoakhhjchkkhmiggakijnkhfnd";
 
-export interface TonWalletProvider2 {
+export interface _TonWindowProvider {
   isTonWallet: boolean;
   send(method: string, params?: any[]): Promise<any>;
   on(eventName: string, handler: (...data: any[]) => any): void;
@@ -18,14 +19,14 @@ export interface TonWalletProvider2 {
 
 declare global {
   interface Window {
-    ton?: TonWalletProvider2;
+    ton?: _TonWindowProvider;
   }
 }
 
 class TonWalletClient {
   constructor(private readonly window: Window) {}
 
-  private get ton(): TonWalletProvider2 | undefined {
+  private get ton(): _TonWindowProvider | undefined {
     return this.window.ton;
   }
 
@@ -75,14 +76,14 @@ if (!global["window"]) {
   global["window"] = null;
 }
 
-export const tonWalletClient = new TonWalletClient(window);
-
 export class ChromeExtensionWalletProvider implements TonWalletProvider {
+  private _tonWalletClient = new TonWalletClient(window);
+
   async connect(): Promise<Wallet> {
     try {
-      await tonWalletClient.ready();
+      await this._tonWalletClient.ready();
 
-      const [[wallet]] = await Promise.all([tonWalletClient.requestWallets(), delay(150)]);
+      const [[wallet]] = await Promise.all([this._tonWalletClient.requestWallets(), delay(150)]);
 
       if (!wallet) {
         throw new Error("TON Wallet is not configured.");
@@ -95,17 +96,15 @@ export class ChromeExtensionWalletProvider implements TonWalletProvider {
     }
   }
   async requestTransaction(request: TransactionDetails, onSuccess?: () => void): Promise<void> {
-    const INIT_CELL = new Cell();
-    request.stateInit.writeTo(INIT_CELL);
-    const b64InitCell = INIT_CELL.toBoc().toString("base64");
-
     try {
-      const res: any = await tonWalletClient.sendTransaction({
+      const res: any = await this._tonWalletClient.sendTransaction({
         to: request.to.toFriendly(),
         value: request.value.toString(),
         dataType: "boc",
         data: request.message?.toBoc().toString("base64"),
-        stateInit: b64InitCell,
+        stateInit: request.stateInit
+          ? stateInitToBuffer(request.stateInit).toString("base64")
+          : undefined,
       });
 
       if (!res) {
