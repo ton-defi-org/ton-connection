@@ -5,6 +5,9 @@ import { TonhubConnector } from "ton-x";
 import * as sinon from "ts-sinon";
 import { TonhubProvider, PersistenceProvider } from "../lib/tonhub-provider";
 import sinonChai from "sinon-chai";
+import { Address, Cell, StateInit, toNano } from "ton";
+import { stat } from "fs";
+import { stateInitMessageCases } from "./cases";
 chai.use(chaiBN(BN));
 chai.use(sinonChai);
 
@@ -88,5 +91,48 @@ describe("Tonhub Provider", () => {
 
     expect(deepLinkStub).to.not.have.been.called;
     expect(tonConnectStub).to.have.been.calledOnce;
+  });
+
+  stateInitMessageCases.forEach(([tst, stateInit, cell, expectedDeepLink]) => {
+    it("Builds transaction deeplink correctly for " + tst, async () => {
+      const txSpy = sinon.default.spy();
+      const prov = new TonhubProvider({
+        onSessionLinkReady: (l) => {},
+        onTransactionLinkReady: txSpy,
+      });
+      sinon.default.replace(prov, "_tonhubConnector", tcStub);
+      await prov.connect();
+      await prov.requestTransaction({
+        to: Address.parse("0:0"),
+        value: toNano(0.1),
+        stateInit,
+        message: cell,
+      });
+      expect(txSpy).to.have.been.calledOnceWith(expectedDeepLink);
+    });
+  });
+
+  stateInitMessageCases.forEach(([tst, stateInit, message]) => {
+    it("Calls transaction handler (no deeplink) correctly for " + tst, async () => {
+      const prov = new TonhubProvider({
+        onSessionLinkReady: (l) => {},
+      });
+      const tonConnectTxStub = sinon.default.stub();
+      sinon.default.replace(prov, "_tonhubConnector", tcStub);
+      sinon.default.replace(prov, "_tonHubConnectorTransaction", tonConnectTxStub);
+      await prov.connect();
+      await prov.requestTransaction({
+        to: Address.parse("0:0"),
+        value: toNano(0.1),
+        stateInit,
+        message,
+      });
+
+      const { stateInit: actualStateInit, message: actualMessage } =
+        tonConnectTxStub.getCall(0).args[0];
+
+      expect(actualStateInit).to.equal(stateInit);
+      expect(actualMessage).to.equal(message);
+    });
   });
 });
