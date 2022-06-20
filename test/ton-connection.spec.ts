@@ -48,12 +48,17 @@ describe("Ton Connection", () => {
       ],
     });
 
-    const parsedResult = await con.makeGetCall(Address.parse("0:0"), "meth", [new Cell()], (d) => {
-      return {
-        address: (d[0] as Cell).beginParse().readAddress(),
-        num: d[1] as BN,
-      };
-    });
+    const parsedResult = await con.makeGetCall(
+      randomAddress("someContract"),
+      "meth",
+      [new Cell()],
+      (d) => {
+        return {
+          address: (d[0] as Cell).beginParse().readAddress(),
+          num: d[1] as BN,
+        };
+      }
+    );
 
     expect(parsedResult.address?.toFriendly()).to.equal(zeroAddress().toFriendly());
     expect(parsedResult.num).to.bignumber.equal(new BN("1999", "hex"));
