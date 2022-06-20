@@ -2,7 +2,7 @@ import { Cell, CellMessage, CommonMessageInfo, InternalMessage, SendMode, TonCli
 import { WalletV4Contract, WalletV4Source } from "ton-contracts";
 import { mnemonicToWalletKey } from "ton-crypto";
 import { TonWalletProvider, TransactionDetails, Wallet } from "./ton-connection";
-import { stateInitToBuffer } from "./utils";
+import { stateInitToBuffer } from "./internal_utils";
 
 // TODO - fix wallet version handling
 export class MnemonicProvider implements TonWalletProvider {

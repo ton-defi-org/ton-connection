@@ -8,6 +8,7 @@ import sinonChai from "sinon-chai";
 import { Address, Cell, StateInit, toNano } from "ton";
 import { stat } from "fs";
 import { stateInitMessageCases } from "./cases";
+import { zeroAddress } from "./utils";
 chai.use(chaiBN(BN));
 chai.use(sinonChai);
 
@@ -103,7 +104,7 @@ describe("Tonhub Provider", () => {
       sinon.default.replace(prov, "_tonhubConnector", tcStub);
       await prov.connect();
       await prov.requestTransaction({
-        to: Address.parse("0:0"),
+        to: zeroAddress(),
         value: toNano(0.1),
         stateInit,
         message: cell,
@@ -122,7 +123,7 @@ describe("Tonhub Provider", () => {
       sinon.default.replace(prov, "_tonHubConnectorTransaction", tonConnectTxStub);
       await prov.connect();
       await prov.requestTransaction({
-        to: Address.parse("0:0"),
+        to: zeroAddress(),
         value: toNano(0.1),
         stateInit,
         message,
