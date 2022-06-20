@@ -2,6 +2,7 @@ import { Cell, CellMessage, CommonMessageInfo, InternalMessage, SendMode, TonCli
 import { WalletV4Contract, WalletV4Source } from "ton-contracts";
 import { mnemonicToWalletKey } from "ton-crypto";
 import { TonWalletProvider, TransactionDetails, Wallet } from "./ton-connection";
+import { stateInitToBuffer } from "./utils";
 
 // TODO - fix wallet version handling
 export class MnemonicProvider implements TonWalletProvider {
@@ -29,22 +30,27 @@ export class MnemonicProvider implements TonWalletProvider {
     //     workchain: 0,
     //   })
     // );
-
     const seqno = await walletContract.getSeqNo(this._tonClient);
-    const INIT_CELL = new Cell();
-
-    request.stateInit.writeTo(INIT_CELL);
 
     const ENC: any = {
       "+": "-",
       "/": "_",
       "=": ".",
     };
-    const b64InitCell = INIT_CELL.toBoc()
-      .toString("base64")
-      .replace(/[+/=]/g, (m) => {
-        return ENC[m];
-      });
+
+    const stateInitMessage = request.stateInit
+      ? new CellMessage(
+          Cell.fromBoc(
+            Buffer.from(
+              stateInitToBuffer(request.stateInit)
+                .toString("base64")
+                .replace(/[+/=]/g, (m) => {
+                  return ENC[m];
+                })
+            )
+          )[0]
+        )
+      : undefined;
 
     const transfer = await walletContract.createTransfer({
       walletId: 698983191,
@@ -56,7 +62,7 @@ export class MnemonicProvider implements TonWalletProvider {
         value: request.value,
         bounce: true,
         body: new CommonMessageInfo({
-          stateInit: new CellMessage(Cell.fromBoc(Buffer.from(b64InitCell, "base64"))[0]),
+          stateInit: stateInitMessage,
           body: request.message && new CellMessage(request.message),
         }),
       }),
