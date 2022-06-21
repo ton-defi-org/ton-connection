@@ -7,6 +7,7 @@ import { Address, Cell, StateInit, toNano } from "ton";
 import { stat } from "fs";
 import { ChromeExtensionWalletProvider } from "../lib/chrome-ext-provider";
 import { stateInitMessageCases } from "./cases";
+import { zeroAddress } from "./utils";
 chai.use(chaiBN(BN));
 chai.use(sinonChai);
 
@@ -37,7 +38,7 @@ describe("Chrome Extension Provider", () => {
       tonWalletClientStub.ready.resolves();
       tonWalletClientStub.requestWallets.resolves([walletStub]);
       chromeExtProvider.requestTransaction({
-        to: Address.parse("0:0"),
+        to: zeroAddress(),
         value: toNano(0.1),
         stateInit: stateInit,
         message: cell,

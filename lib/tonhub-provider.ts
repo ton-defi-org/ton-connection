@@ -1,13 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Cell, ConfigStore } from "ton";
-import {
-  TonhubConnector,
-  TonhubCreatedSession,
-  TonhubSessionState,
-  TonhubSessionStateReady,
-} from "ton-x";
+import { ConfigStore } from "ton";
+import { TonhubConnector, TonhubCreatedSession, TonhubSessionStateReady } from "ton-x";
 import { TonWalletProvider, TransactionDetails, Wallet } from "./ton-connection";
-import { stateInitToBuffer } from "./utils";
+import { stateInitToBuffer } from "./internal_utils";
 
 export type TonHubProviderConfig = {
   isSandbox?: boolean | undefined;
