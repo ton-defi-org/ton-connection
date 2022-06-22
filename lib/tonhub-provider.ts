@@ -133,7 +133,7 @@ export class TonhubProvider implements TonWalletProvider {
     if (this._config.onTransactionLinkReady) {
       this._deepLinkTransaction(request, initCellBoc);
     } else {
-      this._tonHubConnectorTransaction(request, state, initCellBoc, onSuccess);
+      await this._tonHubConnectorTransaction(request, state, initCellBoc, onSuccess);
     }
   }
 
