@@ -146,7 +146,7 @@ export class TonhubProvider implements TonWalletProvider {
     if (!this._session) {
       session = await this._tonhubConnector.createNewSession({
         name: `${location.protocol}//${location.host}`,
-        url: `${location.protocol}//${location.host}`, // TODO: is the url important?
+        url: `${location.protocol}//${location.host}`,
       });
 
       this._config.onSessionLinkReady(session.link);
