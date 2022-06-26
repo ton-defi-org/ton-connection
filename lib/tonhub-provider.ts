@@ -30,7 +30,9 @@ export class TonhubProvider implements TonWalletProvider {
   }
 
   constructor(config: TonHubProviderConfig) {
-    this._tonhubConnector = new TonhubConnector({ testnet: config.isSandbox });
+    this._tonhubConnector = new TonhubConnector({
+      network: config.isSandbox ? "sandbox" : "mainnet",
+    });
     this._config = config;
     const existingSession = this._config.persistenceProvider?.getItem(this.toItemKey());
     try {
@@ -144,7 +146,7 @@ export class TonhubProvider implements TonWalletProvider {
     if (!this._session) {
       session = await this._tonhubConnector.createNewSession({
         name: `${location.protocol}//${location.host}`,
-        url: "", // TODO: is the url important?
+        url: `${location.protocol}//${location.host}`, // TODO: is the url important?
       });
 
       this._config.onSessionLinkReady(session.link);
