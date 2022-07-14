@@ -1,7 +1,7 @@
 {
   "name": "@ton-defi.org/ton-connection",
   "description": "Javascript library for connecting to ton accounts",
-  "version": "0.0.13",
+  "version": "0.0.15",
   "license": "MIT",
   "author": "ton-defi.org",
   "repository": {
@@ -74,6 +74,6 @@
     "ton": "^11.15.0",
     "ton-contracts": "^3.1.0",
     "ton-crypto": "^3.1.0",
-    "ton-x": "^0.6.0"
+    "ton-x": "^2.0.0-beta9"
   }
 }

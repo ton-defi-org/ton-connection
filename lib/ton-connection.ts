@@ -22,18 +22,20 @@ export interface TransactionDetails {
 export type GetResponseValue = Cell | BN;
 
 export class TonConnection {
-  private _provider: TonWalletProvider;
+  private _provider: TonWalletProvider | null;
   public _tonClient: TonClient; // Future - wrap functionality and make private
 
-  constructor(provider: TonWalletProvider, rpcApi: string) {
+  constructor(provider: TonWalletProvider | null, rpcApi: string, apiKey?: string) {
     this._provider = provider;
-    this._tonClient = new TonClient({ endpoint: rpcApi });
+    this._tonClient = new TonClient({ endpoint: rpcApi, apiKey });
   }
 
   requestTransaction(request: TransactionDetails, onSuccess?: () => void): Promise<void> {
+    if (!this._provider) throw new Error("Cannot request transactions without a wallet provider");
     return this._provider.requestTransaction(request, onSuccess);
   }
   connect(): Promise<Wallet> {
+    if (!this._provider) throw new Error("Cannot connect without a wallet provider");
     return this._provider.connect();
   }
 
