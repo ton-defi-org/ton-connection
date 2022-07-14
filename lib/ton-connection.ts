@@ -19,7 +19,7 @@ export interface TransactionDetails {
   message?: Cell;
 }
 
-export type GetResponseValue = Cell | BN;
+export type GetResponseValue = Cell | BN | null;
 
 export class TonConnection {
   private _provider: TonWalletProvider | null;
@@ -39,16 +39,21 @@ export class TonConnection {
     return this._provider.connect();
   }
 
-  #parseGetMethodCall(stack: [["num" | "cell", any]]): GetResponseValue[] {
+  #parseGetMethodCall(stack: [["num" | "cell" | "list", any]]): GetResponseValue[] {
     return stack.map(([type, val]) => {
       switch (type) {
         case "num":
           return new BN(val.replace("0x", ""), "hex");
         case "cell":
-          // console.log("Shahar1", val.bytes)
           return Cell.fromBoc(Buffer.from(val.bytes, "base64"))[0];
+        case "list":
+          if (val.elements.length === 0) {
+            return null;
+          } else {
+            throw new Error("list parsing not supported");
+          }
         default:
-          throw new Error("unknown type");
+          throw new Error(`unknown type: ${type}, val: ${JSON.stringify(val)}`);
       }
     });
   }
