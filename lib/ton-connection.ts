@@ -3,8 +3,6 @@ import BN from "bn.js";
 
 export interface Wallet {
   address: string;
-  publicKey: string;
-  walletVersion: string;
 }
 
 export interface TonWalletProvider {
