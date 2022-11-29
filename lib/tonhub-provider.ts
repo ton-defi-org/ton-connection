@@ -168,12 +168,8 @@ export class TonhubProvider implements TonWalletProvider {
 
     session && this._setSession(session);
 
-    const walletConfig = new ConfigStore(state.wallet.walletConfig);
-
     return {
       address: state.wallet.address,
-      publicKey: walletConfig.getString("pk"),
-      walletVersion: state.wallet.walletType,
     };
   }
 }
