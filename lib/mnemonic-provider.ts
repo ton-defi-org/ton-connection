@@ -91,8 +91,6 @@ export class MnemonicProvider implements TonWalletProvider {
 
     return {
       address: walletContract.address.toFriendly(),
-      publicKey: wk.publicKey.toString("hex"),
-      walletVersion: "PROBLEM",
     };
   }
 }
