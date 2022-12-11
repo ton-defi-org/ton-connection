@@ -26,4 +26,21 @@ describe("Openmask Provider", () => {
     const wallet = await openMaskProvider.connect();
     expect(wallet).to.equal(walletStub);
   });
+
+  stateInitMessageCases.forEach(([tst, stateInit, cell, _, expectedStateInit, expectedMessage]) => {
+    it("requests tx: " + tst, async () => {
+      global["window"] = {};
+      const openMaskProvider = new OpenMaskWalletProvider();
+      const tonWalletClientStub = sinon.stubObject(openMaskProvider._tonWalletClient);
+      sinon.default.replace(openMaskProvider, "_tonWalletClient", tonWalletClientStub);
+      tonWalletClientStub.ready.resolves();
+      tonWalletClientStub.requestWallets.resolves([walletStub]);
+      await openMaskProvider.requestTransaction({
+        to: zeroAddress(),
+        value: toNano(0.1),
+        stateInit: stateInit,
+        message: cell,
+      });
+    });
+  });
 });

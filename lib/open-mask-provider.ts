@@ -38,7 +38,6 @@ class OpenMaskClient {
     value: string;
     data?: string;
     dataType?: "boc" | "hex" | "base64" | "text";
-    stateInit?: string;
   }): Promise<any> {
     return this.ton!.send("ton_sendTransaction", [options]);
   }

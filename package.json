@@ -69,6 +69,7 @@
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^2.0.1",
+    "@orbs-network/ton-gateway": "^2.1.0",
     "axios-request-throttle": "^1.0.0",
     "dotenv": "^16.0.0",
     "ton": "^12.1.5",
