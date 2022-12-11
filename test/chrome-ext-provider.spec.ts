@@ -13,8 +13,6 @@ chai.use(sinonChai);
 
 const walletStub = {
   address: "test",
-  publicKey: "pk",
-  walletVersion: "1",
 };
 
 describe("Chrome Extension Provider", () => {
@@ -37,13 +35,14 @@ describe("Chrome Extension Provider", () => {
       sinon.default.replace(chromeExtProvider, "_tonWalletClient", tonWalletClientStub);
       tonWalletClientStub.ready.resolves();
       tonWalletClientStub.requestWallets.resolves([walletStub]);
-      chromeExtProvider.requestTransaction({
+      tonWalletClientStub.sendTransaction.resolves({});
+      await chromeExtProvider.requestTransaction({
         to: zeroAddress(),
         value: toNano(0.1),
         stateInit: stateInit,
         message: cell,
       });
-      // expect(tonWalletClientStub.sendTransaction.getCall(0).args[0]).to.equal("");
+
       const { stateInit: actualStateInit, data: actualMessage } =
         tonWalletClientStub.sendTransaction.getCall(0).args[0];
 
