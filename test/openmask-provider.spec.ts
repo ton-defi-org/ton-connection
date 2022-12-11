@@ -21,7 +21,7 @@ describe("Openmask Provider", () => {
     const openMaskProvider = new OpenMaskWalletProvider();
     const tonWalletClientStub = sinon.stubObject(openMaskProvider._tonWalletClient);
     sinon.default.replace(openMaskProvider, "_tonWalletClient", tonWalletClientStub);
-    tonWalletClientStub.ready.resolves();
+    sinon.default.replace(tonWalletClientStub, "isAvailable", true);
     tonWalletClientStub.requestWallets.resolves([walletStub]);
     const wallet = await openMaskProvider.connect();
     expect(wallet).to.equal(walletStub);
