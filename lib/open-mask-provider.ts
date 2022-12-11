@@ -16,19 +16,6 @@ class OpenMaskClient {
     return !!this.ton?.isOpenMask;
   }
 
-  ready(timeout = 5000): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const timerId = setInterval(() => {
-        if (this.isAvailable) {
-          clearInterval(timerId);
-          resolve();
-        }
-      }, 50);
-
-      setTimeout(() => reject(new Error("TON Wallet cannot be initialized")), timeout);
-    });
-  }
-
   requestWallets(): Promise<Wallet[]> {
     return this.ton!.send("ton_requestWallets");
   }
@@ -50,6 +37,10 @@ class OpenMaskClient {
   }): Promise<any> {
     return this.ton!.send("ton_deployContract", [options]);
   }
+
+  confirmSeqno(seqNo: number): Promise<void> {
+    return this.ton!.send("ton_confirmWalletSeqNo", [seqNo]);
+  }
 }
 
 export class OpenMaskWalletProvider implements TonWalletProvider {
@@ -57,7 +48,9 @@ export class OpenMaskWalletProvider implements TonWalletProvider {
 
   async connect(): Promise<Wallet> {
     try {
-      await this._tonWalletClient.ready();
+      if (!this._tonWalletClient.isAvailable) {
+        throw new Error("TON Wallet is not available.");
+      }
       const [wallet] = await this._tonWalletClient.requestWallets();
 
       if (!wallet) {
@@ -73,27 +66,29 @@ export class OpenMaskWalletProvider implements TonWalletProvider {
 
   async requestTransaction(request: TransactionDetails, onSuccess?: () => void): Promise<void> {
     try {
-      await this._tonWalletClient.ready();
+      if (!this._tonWalletClient.isAvailable) {
+        throw new Error("TON Wallet is not available.");
+      }
+      let seqNo: number;
       const { stateInit } = request;
       if (stateInit) {
-        const res = await this._tonWalletClient.deployContract({
+        const { walletSeqNo } = await this._tonWalletClient.deployContract({
           initCodeCell: stateInit.code?.toBoc().toString("hex"),
           initDataCell: stateInit.data?.toBoc().toString("hex"),
           initMessageCell: request.message?.toBoc().toString("hex"),
           amount: request.value.toString(),
         });
-        console.log(JSON.stringify(res ?? {}), "Openamask deployContract");
+        seqNo = walletSeqNo;
       } else {
-        const res = await this._tonWalletClient.sendTransaction({
+        seqNo = await this._tonWalletClient.sendTransaction({
           to: request.to.toFriendly(),
           value: request.value.toString(),
           dataType: "hex",
           data: request.message?.toBoc().toString("hex"),
         });
-        console.log(JSON.stringify(res ?? {}), "Openamask sendtxn");
       }
 
-      // await this.provider!.send("ton_confirmWalletSeqNo", [seqNo]);
+      await this._tonWalletClient.confirmSeqno(seqNo);
 
       onSuccess && onSuccess();
     } catch (error: any) {
