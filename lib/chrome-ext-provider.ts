@@ -12,7 +12,8 @@ const TON_WALLET_EXTENSION_URL =
 
 export interface _TonWindowProvider {
   isTonWallet: boolean;
-  send(method: string, params?: any[]): Promise<any>;
+  isOpenMask: boolean;
+  send<T>(method: string, params?: any[]): Promise<T>;
   on(eventName: string, handler: (...data: any[]) => any): void;
 }
 
