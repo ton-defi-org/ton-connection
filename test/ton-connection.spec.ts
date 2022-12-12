@@ -1,11 +1,8 @@
 import chai, { expect } from "chai";
 import chaiBN from "chai-bn";
 import BN from "bn.js";
-import { beginCell, Cell } from "ton";
 import { TonWalletProvider, TransactionDetails, TonConnection, Wallet } from "../lib";
-import * as sinon from "ts-sinon";
 import sinonChai from "sinon-chai";
-import { randomAddress, zeroAddress } from "./utils";
 chai.use(chaiBN(BN));
 chai.use(sinonChai);
 
