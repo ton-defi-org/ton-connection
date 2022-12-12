@@ -14,7 +14,6 @@ export class TonkeeperProvider implements TonWalletProvider {
   connector: TonConnect;
   config: TonkeeperProviderConfig;
 
-  // todo should be type DappMetaData, WalletConnectionSourceHTTP
   constructor(config: TonkeeperProviderConfig) {
     this.connector = new TonConnect({ manifestUrl: config.manifestUrl, storage: config.storage });
     this.config = config;
