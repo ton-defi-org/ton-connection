@@ -23,12 +23,16 @@ export class TonkeeperProvider implements TonWalletProvider {
   connect(): Promise<Wallet> {
     const getWalletP = new Promise<Wallet>((resolve, reject) => {
       this.connector.onStatusChange((wallet) => {
-        if (wallet) {
-          resolve({
-            address: Address.parse(wallet.account.address).toFriendly(),
-          });
-        } else {
-          reject("No wallet received");
+        try {
+          if (wallet) {
+            resolve({
+              address: Address.parse(wallet.account.address).toFriendly(),
+            });
+          } else {
+            reject("No wallet received");
+          }
+        } catch (e) {
+          reject(e);
         }
       }, reject);
     });
