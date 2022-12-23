@@ -18,9 +18,13 @@ export interface TransactionDetails {
 }
 
 export class TonConnection {
-  private _provider: TonWalletProvider;
+  private _provider?: TonWalletProvider;
 
-  constructor(provider: TonWalletProvider) {
+  constructor(provider?: TonWalletProvider) {
+    this._provider = provider;
+  }
+
+  setProvider(provider: TonWalletProvider) {
     this._provider = provider;
   }
 
