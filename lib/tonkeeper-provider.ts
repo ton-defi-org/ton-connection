@@ -49,17 +49,6 @@ export class TonkeeperProvider implements TonWalletProvider {
     request: TransactionDetails,
     onSuccess?: (() => void) | undefined
   ): Promise<void> {
-    console.log(
-      JSON.stringify({
-        address: request.to.toFriendly(),
-        amount: request.value.toString(),
-        initState: request.stateInit
-          ? stateInitToBuffer(request.stateInit).toString("base64")
-          : undefined,
-        payload: request.message ? request.message.toBoc().toString("base64") : undefined,
-      })
-    );
-
     await this.connector.sendTransaction({
       validUntil: Date.now() + 5 * 60 * 1000,
       messages: [
