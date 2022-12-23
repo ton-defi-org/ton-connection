@@ -19,7 +19,7 @@ export class TonkeeperProvider implements TonWalletProvider {
     this.config = config;
   }
 
-  connect(): Promise<Wallet> {
+  async connect(): Promise<Wallet> {
     const getWalletP = new Promise<Wallet>((resolve, reject) => {
       this.connector.onStatusChange((wallet) => {
         try {
@@ -36,7 +36,7 @@ export class TonkeeperProvider implements TonWalletProvider {
       }, reject);
     });
 
-    this.connector.restoreConnection();
+    await this.connector.restoreConnection();
     if (!this.connector.connected) {
       const sessionLink = this.connector.connect(this.config.connectionDetails);
       this.config.onSessionLinkReady(sessionLink);
