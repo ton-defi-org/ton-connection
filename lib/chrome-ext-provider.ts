@@ -70,10 +70,10 @@ class TonWalletClient {
   }
 }
 
-if (!global["window"]) {
+if (!globalThis["window"]) {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  global["window"] = null;
+  globalThis["window"] = null;
 }
 
 export class ChromeExtensionWalletProvider implements TonWalletProvider {
