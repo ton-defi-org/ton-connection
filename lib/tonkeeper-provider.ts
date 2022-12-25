@@ -1,10 +1,9 @@
-import TonConnect, { IStorage } from "@tonconnect/sdk";
+import TonConnect, { IStorage, WalletInfo } from "@tonconnect/sdk";
 import { Address } from "ton";
 import { stateInitToBuffer } from "./internal_utils";
 import { TonWalletProvider, TransactionDetails, Wallet } from "./ton-connection";
 
 export type TonkeeperProviderConfig = {
-  connectionDetails: { bridgeUrl: string; universalLink: string };
   manifestUrl: string;
   onSessionLinkReady: (link: string) => void;
   storage?: IStorage;
@@ -13,6 +12,7 @@ export type TonkeeperProviderConfig = {
 export class TonkeeperProvider implements TonWalletProvider {
   connector: TonConnect;
   config: TonkeeperProviderConfig;
+  walletInfo?: WalletInfo;
 
   constructor(config: TonkeeperProviderConfig) {
     this.connector = new TonConnect({ manifestUrl: config.manifestUrl, storage: config.storage });
@@ -20,6 +20,13 @@ export class TonkeeperProvider implements TonWalletProvider {
   }
 
   async connect(): Promise<Wallet> {
+    if (!this.walletInfo) {
+      const wallets = await this.connector.getWallets();
+      this.walletInfo = wallets.find((w) => w.name === "Tonkeeper");
+      if (!this.walletInfo) {
+        throw new Error("Tonkeeper wallet not found");
+      }
+    }
     const getWalletP = new Promise<Wallet>((resolve, reject) => {
       this.connector.onStatusChange((wallet) => {
         try {
@@ -38,8 +45,10 @@ export class TonkeeperProvider implements TonWalletProvider {
 
     await this.connector.restoreConnection();
     if (!this.connector.connected) {
-      const sessionLink = this.connector.connect(this.config.connectionDetails);
-      this.config.onSessionLinkReady(sessionLink);
+      const sessionLink = this.connector.connect(this.walletInfo);
+      if (sessionLink) {
+        this.config.onSessionLinkReady(sessionLink);
+      }
     }
 
     return getWalletP;

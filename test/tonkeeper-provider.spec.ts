@@ -26,12 +26,10 @@ class LocalStorageStub implements IStorage {
 describe("Tonkeeper Provider", () => {
   it("connects", async () => {
     const tk = new TonkeeperProvider({
-      connectionDetails: {
-        bridgeUrl: "mybridge.com",
-        universalLink: "mylink.com",
-      },
       manifestUrl: "manifest.com/1.json",
-      onSessionLinkReady: (link: string) => {},
+      onSessionLinkReady: (link: string) => {
+        console.log(link);
+      },
       storage: new LocalStorageStub(),
     });
     const tonConnectStub = sinon.stubObject(tk.connector);
@@ -40,6 +38,7 @@ describe("Tonkeeper Provider", () => {
     tonConnectStub.onStatusChange.callsFake((func, _) => {
       func({ account: { address: zeroAddress().toFriendly() } });
     });
+    tonConnectStub.getWallets.resolves([{ name: "Tonkeeper" }]);
     const wallet = await tk.connect();
     expect(wallet.address).to.equal(zeroAddress().toFriendly());
   });
