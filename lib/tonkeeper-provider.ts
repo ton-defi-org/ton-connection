@@ -1,4 +1,9 @@
-import TonConnect, { IStorage, WalletInfo } from "@tonconnect/sdk";
+import TonConnect, {
+  IStorage,
+  WalletInfo,
+  WalletInfoInjected,
+  WalletInfoRemote,
+} from "@tonconnect/sdk";
 import { Address } from "ton";
 import { stateInitToBuffer } from "./internal_utils";
 import { TonWalletProvider, TransactionDetails, Wallet } from "./ton-connection";
@@ -17,6 +22,14 @@ export class TonkeeperProvider implements TonWalletProvider {
   constructor(config: TonkeeperProviderConfig) {
     this.connector = new TonConnect({ manifestUrl: config.manifestUrl, storage: config.storage });
     this.config = config;
+  }
+
+  private isInjected(walletInfo: WalletInfo): walletInfo is WalletInfoInjected {
+    return "injected" in walletInfo;
+  }
+
+  private isRemote(walletInfo: WalletInfo): walletInfo is WalletInfoRemote {
+    return "universalLink" in walletInfo && "bridgeUrl" in walletInfo;
   }
 
   async connect(): Promise<Wallet> {
@@ -44,10 +57,18 @@ export class TonkeeperProvider implements TonWalletProvider {
     });
 
     await this.connector.restoreConnection();
+    
     if (!this.connector.connected) {
-      const sessionLink = this.connector.connect(this.walletInfo);
-      if (sessionLink) {
+      if (this.isInjected(this.walletInfo)) {
+        this.connector.connect({ jsBridgeKey: this.walletInfo.jsBridgeKey });
+      } else if (this.isRemote(this.walletInfo)) {
+        const sessionLink = this.connector.connect({
+          universalLink: this.walletInfo.universalLink,
+          bridgeUrl: this.walletInfo.bridgeUrl,
+        });
         this.config.onSessionLinkReady(sessionLink);
+      } else {
+        throw new Error("Unknown wallet type");
       }
     }
 
