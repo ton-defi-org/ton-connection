@@ -38,7 +38,7 @@ describe("Tonkeeper Provider", () => {
     tonConnectStub.onStatusChange.callsFake((func, _) => {
       func({ account: { address: zeroAddress().toFriendly() } });
     });
-    tonConnectStub.getWallets.resolves([{ name: "Tonkeeper" }]);
+    tonConnectStub.getWallets.resolves([{ name: "Tonkeeper", bridgeUrl: "-", universalLink: "-" }]);
     const wallet = await tk.connect();
     expect(wallet.address).to.equal(zeroAddress().toFriendly());
   });
