@@ -42,6 +42,10 @@ export class TonhubProvider implements TonWalletProvider {
     }
   }
 
+  async disconnect(): Promise<void> {
+    this._config.persistenceProvider?.removeItem(this.toItemKey());
+  }
+
   private _setSession(session: TonhubCreatedSession) {
     this._session = session;
     this._config.persistenceProvider?.setItem(this.toItemKey(), JSON.stringify(session));

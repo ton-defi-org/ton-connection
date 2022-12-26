@@ -1,10 +1,14 @@
-import TonConnect, { IStorage } from "@tonconnect/sdk";
+import TonConnect, {
+  IStorage,
+  WalletInfo,
+  WalletInfoInjected,
+  WalletInfoRemote,
+} from "@tonconnect/sdk";
 import { Address } from "ton";
 import { stateInitToBuffer } from "./internal_utils";
 import { TonWalletProvider, TransactionDetails, Wallet } from "./ton-connection";
 
 export type TonkeeperProviderConfig = {
-  connectionDetails: { bridgeUrl: string; universalLink: string };
   manifestUrl: string;
   onSessionLinkReady: (link: string) => void;
   storage?: IStorage;
@@ -13,13 +17,33 @@ export type TonkeeperProviderConfig = {
 export class TonkeeperProvider implements TonWalletProvider {
   connector: TonConnect;
   config: TonkeeperProviderConfig;
+  walletInfo?: WalletInfo;
 
   constructor(config: TonkeeperProviderConfig) {
     this.connector = new TonConnect({ manifestUrl: config.manifestUrl, storage: config.storage });
     this.config = config;
   }
+  
+  async disconnect(): Promise<void> {
+    await this.connector.disconnect();
+  }
+
+  private isInjected(walletInfo: WalletInfo): walletInfo is WalletInfoInjected {
+    return "jsBridgeKey" in walletInfo && "injected" in walletInfo && walletInfo.injected;
+  }
+
+  private isRemote(walletInfo: WalletInfo): walletInfo is WalletInfoRemote {
+    return "universalLink" in walletInfo && "bridgeUrl" in walletInfo;
+  }
 
   async connect(): Promise<Wallet> {
+    if (!this.walletInfo) {
+      const wallets = await this.connector.getWallets();
+      this.walletInfo = wallets.find((w) => w.name === "Tonkeeper");
+      if (!this.walletInfo) {
+        throw new Error("Tonkeeper wallet not found");
+      }
+    }
     const getWalletP = new Promise<Wallet>((resolve, reject) => {
       this.connector.onStatusChange((wallet) => {
         try {
@@ -37,9 +61,19 @@ export class TonkeeperProvider implements TonWalletProvider {
     });
 
     await this.connector.restoreConnection();
+    
     if (!this.connector.connected) {
-      const sessionLink = this.connector.connect(this.config.connectionDetails);
-      this.config.onSessionLinkReady(sessionLink);
+      if (this.isInjected(this.walletInfo)) {
+        this.connector.connect({ jsBridgeKey: this.walletInfo.jsBridgeKey });
+      } else if (this.isRemote(this.walletInfo)) {
+        const sessionLink = this.connector.connect({
+          universalLink: this.walletInfo.universalLink,
+          bridgeUrl: this.walletInfo.bridgeUrl,
+        });
+        this.config.onSessionLinkReady(sessionLink);
+      } else {
+        throw new Error("Unknown wallet type");
+      }
     }
 
     return getWalletP;
