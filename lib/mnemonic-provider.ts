@@ -12,6 +12,11 @@ export class MnemonicProvider implements TonWalletProvider {
     this._mnemonic = mnemonic;
     this._tonClient = new TonClient({ endpoint: rpcApi });
   }
+  
+  disconnect(): Promise<void> {
+    return Promise.resolve();
+  }
+  
   async requestTransaction(request: TransactionDetails, onSuccess?: () => void): Promise<void> {
     const wk = await mnemonicToWalletKey(this._mnemonic);
 

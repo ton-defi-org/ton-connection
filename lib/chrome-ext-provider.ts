@@ -79,6 +79,10 @@ if (!globalThis["window"]) {
 export class ChromeExtensionWalletProvider implements TonWalletProvider {
   private _tonWalletClient = new TonWalletClient(window);
 
+  disconnect(): Promise<void> {
+    return Promise.resolve();
+  }
+
   async connect(): Promise<Wallet> {
     try {
       await this._tonWalletClient.ready();

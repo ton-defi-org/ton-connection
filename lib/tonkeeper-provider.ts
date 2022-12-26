@@ -23,9 +23,13 @@ export class TonkeeperProvider implements TonWalletProvider {
     this.connector = new TonConnect({ manifestUrl: config.manifestUrl, storage: config.storage });
     this.config = config;
   }
+  
+  async disconnect(): Promise<void> {
+    await this.connector.disconnect();
+  }
 
   private isInjected(walletInfo: WalletInfo): walletInfo is WalletInfoInjected {
-    return "injected" in walletInfo;
+    return "jsBridgeKey" in walletInfo && "injected" in walletInfo && walletInfo.injected;
   }
 
   private isRemote(walletInfo: WalletInfo): walletInfo is WalletInfoRemote {

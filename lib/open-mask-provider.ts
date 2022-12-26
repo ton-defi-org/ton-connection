@@ -46,6 +46,10 @@ class OpenMaskClient {
 export class OpenMaskWalletProvider implements TonWalletProvider {
   private _tonWalletClient = new OpenMaskClient(window);
 
+  disconnect(): Promise<void> {
+    return Promise.resolve();
+  }
+
   async connect(): Promise<Wallet> {
     try {
       if (!this._tonWalletClient.isAvailable) {
