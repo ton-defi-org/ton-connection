@@ -20,9 +20,9 @@ export class MnemonicProvider implements TonWalletProvider {
   private _tonClient: TonClient;
   walletType: "v3r2" | "v4r2";
 
-  constructor(mnemonic: string[], rpcApi: string, walletType: "v3r2" | "v4r2") {
+  constructor(mnemonic: string[], tonClient: TonClient, walletType: "v3r2" | "v4r2") {
     this._mnemonic = mnemonic;
-    this._tonClient = new TonClient({ endpoint: rpcApi });
+    this._tonClient = tonClient;
     this.walletType = walletType;
   }
 
