@@ -8,6 +8,7 @@ export interface Wallet {
 export interface TonWalletProvider {
   connect(): Promise<Wallet>;
   requestTransaction(request: TransactionDetails, onSuccess?: () => void): Promise<void>;
+  disconnect(): Promise<void>;
 }
 
 export interface TransactionDetails {
@@ -35,5 +36,14 @@ export class TonConnection {
   connect(): Promise<Wallet> {
     if (!this._provider) throw new Error("Cannot connect without a wallet provider");
     return this._provider.connect();
+  }
+
+  async disconnect(): Promise<void> {
+    if (!this._provider) throw new Error("Cannot connect without a wallet provider");
+    try {
+      await this._provider.disconnect();
+    } finally {
+      this.setProvider(null);
+    }
   }
 }
