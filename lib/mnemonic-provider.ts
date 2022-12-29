@@ -1,4 +1,14 @@
-import { Cell, CellMessage, CommonMessageInfo, InternalMessage, SendMode, TonClient } from "ton";
+import {
+  Cell,
+  CellMessage,
+  CommonMessageInfo,
+  Contract,
+  InternalMessage,
+  SendMode,
+  TonClient,
+  WalletContract,
+  WalletV3R2Source,
+} from "ton";
 import { WalletV4Contract, WalletV4Source } from "ton-contracts";
 import { mnemonicToWalletKey } from "ton-crypto";
 import { TonWalletProvider, TransactionDetails, Wallet } from "./ton-connection";
@@ -8,34 +18,20 @@ import { stateInitToBuffer } from "./internal_utils";
 export class MnemonicProvider implements TonWalletProvider {
   private _mnemonic: string[];
   private _tonClient: TonClient;
-  constructor(mnemonic: string[], rpcApi: string) {
+  walletType: "v3r2" | "v4r2";
+
+  constructor(mnemonic: string[], rpcApi: string, walletType: "v3r2" | "v4r2") {
     this._mnemonic = mnemonic;
     this._tonClient = new TonClient({ endpoint: rpcApi });
+    this.walletType = walletType;
   }
-  
+
   disconnect(): Promise<void> {
     return Promise.resolve();
   }
-  
+
   async requestTransaction(request: TransactionDetails, onSuccess?: () => void): Promise<void> {
     const wk = await mnemonicToWalletKey(this._mnemonic);
-
-    const walletContract = WalletV4Contract.create(
-      WalletV4Source.create({
-        publicKey: wk.publicKey,
-        workchain: 0,
-      })
-    );
-
-    // const walletContract = WalletContract.create(
-    //   this._tonClient,
-    //   //TODO VER
-    //   WalletV4Source.create({
-    //     publicKey: wk.publicKey,
-    //     workchain: 0,
-    //   })
-    // );
-    const seqno = await walletContract.getSeqNo(this._tonClient);
 
     const ENC: any = {
       "+": "-",
@@ -57,8 +53,7 @@ export class MnemonicProvider implements TonWalletProvider {
         )
       : undefined;
 
-    const transfer = await walletContract.createTransfer({
-      walletId: 698983191,
+    const baseTransfer = (seqno: number) => ({
       secretKey: wk.secretKey,
       seqno: seqno,
       sendMode: SendMode.PAY_GAS_SEPARATLY, //+ SendMode.IGNORE_ERRORS,
@@ -73,29 +68,63 @@ export class MnemonicProvider implements TonWalletProvider {
       }),
     });
 
+    let transfer: Cell;
+    let walletContract: Contract;
+
+    if (this.walletType === "v3r2") {
+      walletContract = WalletContract.create(
+        this._tonClient,
+        WalletV3R2Source.create({
+          publicKey: wk.publicKey,
+          workchain: 0,
+        })
+      );
+
+      const seqno = await (walletContract as WalletContract).getSeqNo();
+      transfer = (walletContract as WalletContract).createTransfer(baseTransfer(seqno));
+    } else if (this.walletType === "v4r2") {
+      walletContract = WalletV4Contract.create(
+        WalletV4Source.create({
+          publicKey: wk.publicKey,
+          workchain: 0,
+        })
+      );
+      const seqno = await (walletContract as WalletV4Contract).getSeqNo(this._tonClient);
+      transfer = await (walletContract as WalletV4Contract).createTransfer({
+        walletId: 698983191,
+        ...baseTransfer(seqno),
+      });
+    } else {
+      throw new Error("unknown wallet type");
+    }
+
     await this._tonClient.sendExternalMessage(walletContract, transfer);
   }
+
   async connect(): Promise<Wallet> {
     const wk = await mnemonicToWalletKey(this._mnemonic);
 
-    const walletContract = WalletV4Contract.create(
-      WalletV4Source.create({
-        publicKey: wk.publicKey,
-        workchain: 0,
-      })
-    );
-
-    // const walletContract = WalletContract.create(
-    //   this._tonClient,
-    //   //TODO VER
-    //   WalletV3R2Source.create({
-    //     publicKey: wk.publicKey,
-    //     workchain: 0,
-    //   })
-    // );
-
-    return {
-      address: walletContract.address.toFriendly(),
-    };
+    if (this.walletType === "v4r2") {
+      return {
+        address: WalletV4Contract.create(
+          WalletV4Source.create({
+            publicKey: wk.publicKey,
+            workchain: 0,
+          })
+        ).address.toFriendly(),
+      };
+    } else if (this.walletType === "v3r2") {
+      return {
+        address: WalletContract.create(
+          this._tonClient,
+          WalletV3R2Source.create({
+            publicKey: wk.publicKey,
+            workchain: 0,
+          })
+        ).address.toFriendly(),
+      };
+    } else {
+      throw new Error("Unknown wallet");
+    }
   }
 }
