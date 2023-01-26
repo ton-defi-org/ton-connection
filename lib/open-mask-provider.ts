@@ -88,7 +88,7 @@ export class OpenMaskWalletProvider implements TonWalletProvider {
         const { walletSeqNo } = await this._tonWalletClient.deployContract({
           initCodeCell: stateInit.code?.toBoc().toString("hex"),
           initDataCell: stateInit.data?.toBoc().toString("hex"),
-          initMessageCell: request.message?.toBoc().toString("hex"),
+          initMessageCell: payload ?? text,
           amount: request.value.toString(),
         });
         seqNo = walletSeqNo;

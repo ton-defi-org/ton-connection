@@ -63,7 +63,7 @@ export class MnemonicProvider implements TonWalletProvider {
         bounce: true,
         body: new CommonMessageInfo({
           stateInit: stateInitMessage,
-          body: request.message && new CellMessage(request.message as Cell),
+          body: request.message instanceof Cell ? new CellMessage(request.message as Cell) : null,
         }),
       }),
     });

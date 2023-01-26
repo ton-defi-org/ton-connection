@@ -59,6 +59,14 @@ export class TonhubProvider implements TonWalletProvider {
   private _deepLinkTransaction(request: TransactionDetails, initCell?: Buffer) {
     const deepLinkPrefix = this._config.isSandbox ? "ton-test" : "ton";
 
+    let payload, text;
+
+    if (request.message instanceof Cell) {
+      payload = request.message.toBoc();
+    } else if (request.message) {
+      text = request.message;
+    }
+
     function encodeBase64URL(buffer: Buffer): string {
       const ENC: any = {
         "+": "-",
@@ -76,8 +84,12 @@ export class TonhubProvider implements TonWalletProvider {
       link = `${link}&init=${encodeBase64URL(initCell)}`;
     }
 
-    if (request.message) {
-      link = `${link}&bin=${encodeBase64URL(request.message.toBoc())}`;
+    if (payload) {
+      link = `${link}&bin=${encodeBase64URL(payload)}`;
+    }
+    
+    if (text) {
+      link = `${link}&text=${encodeBase64URL(Buffer.from(text))}`;
     }
 
     this._config.onTransactionLinkReady!(link);
