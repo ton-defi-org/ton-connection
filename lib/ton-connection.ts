@@ -15,7 +15,7 @@ export interface TransactionDetails {
   to: Address;
   value: BN;
   stateInit?: StateInit;
-  message?: Cell;
+  message?: Cell | string;
 }
 
 export class TonConnection {

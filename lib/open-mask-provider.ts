@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { TonWalletProvider, TransactionDetails, Wallet } from "./ton-connection";
 import { _TonWindowProvider } from "./chrome-ext-provider";
+import { Cell } from "ton";
 
 const TON_WALLET_EXTENSION_URL =
   "https://chrome.google.com/webstore/detail/openmask/penjlddjkjgpnkllboccdgccekpkcbin";
@@ -69,6 +70,14 @@ export class OpenMaskWalletProvider implements TonWalletProvider {
   }
 
   async requestTransaction(request: TransactionDetails, onSuccess?: () => void): Promise<void> {
+    let payload: string | undefined, text: string | undefined;
+
+    if (request.message instanceof Cell) {
+      payload = request.message.toBoc().toString("hex");
+    } else if (request.message) {
+      text = request.message;
+    }
+
     try {
       if (!this._tonWalletClient.isAvailable) {
         throw new Error("TON Wallet is not available.");
@@ -87,8 +96,8 @@ export class OpenMaskWalletProvider implements TonWalletProvider {
         seqNo = await this._tonWalletClient.sendTransaction({
           to: request.to.toFriendly(),
           value: request.value.toString(),
-          dataType: "hex",
-          data: request.message?.toBoc().toString("hex"),
+          dataType: text ? "text" : "hex",
+          data: text ?? payload,
         });
       }
 

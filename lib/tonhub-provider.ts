@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { ConfigStore } from "ton";
+import { Cell, ConfigStore } from "ton";
 import { TonhubConnector, TonhubCreatedSession, TonhubSessionStateReady } from "ton-x";
 import { TonWalletProvider, TransactionDetails, Wallet } from "./ton-connection";
 import { stateInitToBuffer } from "./internal_utils";
@@ -89,6 +89,14 @@ export class TonhubProvider implements TonWalletProvider {
     initCell?: Buffer,
     onSuccess?: () => void
   ) {
+    let payload: string | undefined, text: string | undefined;
+
+    if (request.message instanceof Cell) {
+      payload = request.message.toBoc().toString("base64");
+    } else if (request.message) {
+      text = request.message;
+    }
+
     const response = await this._tonhubConnector.requestTransaction({
       seed: this._session!.seed,
       appPublicKey: state.wallet.appPublicKey,
@@ -96,8 +104,8 @@ export class TonhubProvider implements TonWalletProvider {
       value: request.value.toString(),
       timeout: 5 * 60 * 1000,
       stateInit: initCell?.toString("base64"),
-      // text: request.text,
-      payload: request.message?.toBoc().toString("base64"),
+      text: text,
+      payload: payload,
     });
 
     if (response.type === "rejected") {

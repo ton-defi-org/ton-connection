@@ -4,7 +4,7 @@ import TonConnect, {
   WalletInfoInjected,
   WalletInfoRemote,
 } from "@tonconnect/sdk";
-import { Address } from "ton";
+import { Address, Cell } from "ton";
 import { stateInitToBuffer } from "./internal_utils";
 import { TonWalletProvider, TransactionDetails, Wallet } from "./ton-connection";
 
@@ -23,7 +23,7 @@ export class TonkeeperProvider implements TonWalletProvider {
     this.connector = new TonConnect({ manifestUrl: config.manifestUrl, storage: config.storage });
     this.config = config;
   }
-  
+
   async disconnect(): Promise<void> {
     await this.connector.disconnect();
   }
@@ -61,7 +61,7 @@ export class TonkeeperProvider implements TonWalletProvider {
     });
 
     await this.connector.restoreConnection();
-    
+
     if (!this.connector.connected) {
       if (this.isInjected(this.walletInfo)) {
         this.connector.connect({ jsBridgeKey: this.walletInfo.jsBridgeKey });
@@ -83,6 +83,12 @@ export class TonkeeperProvider implements TonWalletProvider {
     request: TransactionDetails,
     onSuccess?: (() => void) | undefined
   ): Promise<void> {
+    let msg = request.message;
+
+    if (msg instanceof Cell) {
+      msg = msg.toBoc().toString("base64");
+    }
+
     await this.connector.sendTransaction({
       validUntil: Date.now() + 5 * 60 * 1000,
       messages: [
@@ -92,7 +98,7 @@ export class TonkeeperProvider implements TonWalletProvider {
           stateInit: request.stateInit
             ? stateInitToBuffer(request.stateInit).toString("base64")
             : undefined,
-          payload: request.message ? request.message.toBoc().toString("base64") : undefined,
+          payload: msg,
         },
       ],
     });
