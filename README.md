@@ -1,5 +1,11 @@
-# Ton Connection
+# Ton Connection - DEPRECATED
 > A library for connecting to ton
+
+
+## Deprecation notice
+With the release of [TON Connect 2](https://github.com/ton-connect/sdk), after TonHub will adhere to the TC2 standard, this library will no longer be needed.
+
+For now, it is recommended to use TC2, and add Tonhub support manually (use this library as a reference implementation only) if needed.
 
 ## Description
 
